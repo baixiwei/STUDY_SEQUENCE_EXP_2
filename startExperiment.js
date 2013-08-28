@@ -22,7 +22,7 @@ function startExperiment( external_content, display_loc, prepend_data, condition
     startExperiment_training_questions  = shuffle( external_content.training_questions.slice(0,external_content.training_questions.length) );
     
 	// build skip object here
-	var skip_training = false; // for debug purposes;
+	// var skip_training = false; // for debug purposes;
 	$.ajax({
 		type: 'post',
 		cache: false,
@@ -31,7 +31,7 @@ function startExperiment( external_content, display_loc, prepend_data, condition
 		success: function(data)
 		{
 			var progress = JSON.parse(data);
-			progress.training = skip_training;
+			// progress.training = skip_training;   // for debug purposes
 			startExperiment_skip = progress;
 			
 			doIntroduction( display_loc, prepend_data, condition, yoking_info );
@@ -503,8 +503,8 @@ function doTrial( display_loc, callback ) {
                 $('#continue').show();
             } else {
                 $('#feedback').addClass('feedback_incorrect');
-                // setTimeout( function() { $('#continue').show(); }, 10000 );
-                $('#continue').show();
+                setTimeout( function() { $('#continue').show(); }, 10000 );
+                // $('#continue').show();
             }
         }
     } );
@@ -666,7 +666,7 @@ function getNextTrial( option_text, iter_num ) {
 function getProgressBar() {
     var bar = "<ul>"; 
     for ( var i=0; i<this.categories.length; i++ ) {
-        bar += "<li><h4>"+this.categories[i]+":</h4><p>"+this.completes_tot[i]+" out of "+this.complete_targ+" complete</p></li>";
+        bar += "<li><h4>"+this.categories[i]+":</h4><p>"+this.completes_tot[i]+" out of "+this.complete_targs[i]+" complete</p></li>";
     }
     bar += "</ul>";
     return bar;
@@ -740,6 +740,7 @@ function getOptionsText( current_cat_idx, iter_num ) {
     var options = [];
     switch( this.condition ) {
         case SELF_REGULATED:
+            /* In the self-regulated condition, subjects always have 6 options to choose from plus possibly Quit. There are 2 options for each category: mean, median, and mode. Within each category there is one "related data" option and one "unrelated data" option. The related data option will use the same story problem and either the same set of data (if this data has not yet been viewed with the given category) or modified data (otherwise) as that of the current trial. The unrelated data option will use a new (yet unused) story problem and a randomly generated data set. */
             // options for "related" data sets
             for ( var i=0; i<this.categories.length; i++ ) {
                 if ( this.completes_rct[i]>0 ) {
@@ -762,6 +763,7 @@ function getOptionsText( current_cat_idx, iter_num ) {
             }
             break;
         case BLOCKED:
+            /* In the blocked condition, subjects have only 1 option, which is either Quit or one of the options described above for the self-regulated condition. In the latter case, both the category and data relation for the next trial are determined by yoking to a sequence of selections made by a participant in the previous iteration of the experiment, i.e. Spring 2013. The sequence of category and data relation selections made for each trial (iter_num) by that participant are recorded in this.category_seq and this.data_seq. The code below selects an option button identical to the one actually selected by the yoked-to participant on the current iteration. */
             if ( this.data_seq[ iter_num ]=="random" ) {
                 options.push( "Find the <em>" + this.category_seq[iter_num] + "</em> for a <em>different story problem</em>." );
             } else if ( this.data_seq[ iter_num ]=="identical" ) {
@@ -773,6 +775,7 @@ function getOptionsText( current_cat_idx, iter_num ) {
             }
             break;
         case RANDOM:
+            /* In the random condition, subjects have only 1 option, which is either Quit or one of the options described above for the self-regulated condition. As in the blocked condition, the participant is yoked to a participant from the previous experiment. this.complete_targs records the total number of trials completed by the yoked-to participant for each category.  Quit becomes available when the participant has completed as many trials of each category as the yoked-to participant. If it's not time to quit, the category for the next trial is selected randomly, weighting each category by the number of trials remaining before that category is completed. Note that the resulting sequence is equivalent to what you would get if you randomly shuffled the instances of the categories to be completed. However, unlike randomly shuffling to generate a sequence, the way we do it allows us to recover from page reload without needing to store the sequence of already-completed categories - we just need to know HOW MANY of each category has been completed. As for data relation, this condition follows the rule that unrelated data is used if the same category is being repeated, while related data is used otherwise. */
             var remaining = [];
             for ( i=0; i<this.categories.length; i++ ) {
                 remaining.push( this.complete_targs[i] - this.completes_tot[i] );
@@ -791,6 +794,7 @@ function getOptionsText( current_cat_idx, iter_num ) {
             }
             break;
         case INTERLEAVED:
+            /* In the interleaved condition, subjects have only 1 option, which is either Quit or one of the options described above for the self-regulated condition. As in the blocked condition, the participant is yoked to a participant from the previous experiment. However, the yoking only constrains the total number of complete trials, not the individual number per category. Participants follow the sequence mean-median-mode, starting with mean, until the total target number is reached. Data relation follows the same rule as for the random condition. */
             if ( getSum( this.completes_tot ) < getSum( this.complete_targs ) ) {
                 var new_cat_idx = ( current_cat_idx + 1 ) % this.categories.length;
                 if ( new_cat_idx==0 ) {

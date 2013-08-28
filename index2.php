@@ -152,7 +152,7 @@ function getCondition($username) {
 var sid = <?php echo $_SESSION['studentid']; ?>;
 var condition = <?php echo $_SESSION['condition']; ?>;
 var yokedId = <?php echo $_SESSION['yokeid']; ?>;
-
+var prepend_data = { "subjid": sid, "cond": condition }
 
 // check if they already have seen consent form
 $.ajax({
@@ -221,9 +221,6 @@ function show_consent_form() {
 
 // starting experiment
 
-// Add subject id and condition into prepend_data
-var prepend_data = { "subjid": sid, "cond": condition }
-
 // registerYokeId: store the yoked id for a subject in the database
 function registerYokeId(subject, yoke){
 	$.ajax({
@@ -251,7 +248,7 @@ function yokeThenStart( condition, callback ) {
 	$.ajax({ type: "GET", cache: false, url: "yoked_data.csv", dataType: "text",
 		success: function(data) {
 			var rows            = $.csv.toObjects(data);
-			var yoked_sids      = [ 9, 15, 19, 43, 53, 54, 56, 60, 68, 85, 120, 134, 148, 157, 168, 176, 177, 179, 181, 188, 191, 200, 216, 236, 237, 240, 241, 257, 267, 279, 284, 288, 290, 300, 309, 314, 315, 318, 327, 348, 353, 382, 390, 392, 396, 414, 420, 427, 443, 448, 452, 456, 458, 463, 470, 473, 478, 501, 503, 508, 510, 513, 516, 525, 528, 540, 553, 585, 586, 587, 597, 598, 604, 608, 613, 631, 638, 655, 662, 671, 698, 706, 724, 733, 741, 744, 758, 761, 774, 776, 781, 791, 802, 810, 826 ];
+            var yoked_sids      = [ 9, 15, 16, 19, 43, 53, 54, 56, 60, 68, 85, 120, 134, 148, 157, 168, 176, 177, 181, 188, 191, 216, 236, 237, 240, 241, 257, 267, 279, 284, 288, 290, 300, 309, 314, 315, 327, 348, 353, 382, 390, 392, 396, 414, 420, 427, 443, 448, 452, 456, 458, 463, 470, 473, 478, 501, 503, 508, 510, 513, 516, 525, 528, 540, 553, 585, 586, 587, 597, 598, 604, 608, 631, 638, 655, 662, 671, 698, 706, 724, 733, 741, 744, 758, 761, 774, 781, 791, 802, 810 ];
 			var yoked_sid       = yoked_sids[ Math.floor( Math.random()*(yoked_sids.length) ) ];
 			if(yokedId > -1){
 				yoked_sid = yokedId;
@@ -271,6 +268,9 @@ function yokeThenStart( condition, callback ) {
 					tot_targ += 1;
 				}
 			}
+            console.log( "Selected yoked sid " + yoked_sid + " from " + yoked_sids.length + " possible sids." );
+            console.log( "If blocking, category sequence should be: " + category_seq.toString() + ", and data sequence should be: " + data_seq.toString() );
+            console.log( "If interleaving/random, total number of trials should be " + tot_targ + " or numbers by categories should be " + complete_targs );
 			callback( { "yoked_sid": yoked_sid, "category_seq": category_seq, "data_seq": data_seq, "complete_targs": complete_targs, "tot_targ": tot_targ } );
 		},
 		error: function(data) {
@@ -341,6 +341,7 @@ function start(){
 		]
     };
 
+    console.log( "Condition selected or recovered: " + [ "Self-Regulated", "Blocked", "Random", "Interleaved" ][ condition ] );
 
 	if ( condition == SELF_REGULATED ) {
 		// if in the self-regulated condition, start the experiment
